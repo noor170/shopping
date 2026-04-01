@@ -45,6 +45,13 @@ cd backend
 mvn spring-boot:run
 ```
 
+Backend jar packaging:
+
+```bash
+cd backend
+mvn clean package
+```
+
 Seeded accounts:
 
 - `admin / Admin@123`

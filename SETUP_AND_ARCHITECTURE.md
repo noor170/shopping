@@ -100,6 +100,13 @@ cd backend
 mvn test
 ```
 
+Backend jar packaging:
+
+```bash
+cd backend
+mvn clean package
+```
+
 Frontend production build:
 
 ```bash

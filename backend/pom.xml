@@ -13,6 +13,7 @@
     <groupId>com.example</groupId>
     <artifactId>task-management-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
     <name>task-management-backend</name>
     <description>Task management system with JWT, RBAC, workflow, and audit tracking</description>
 
