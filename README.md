@@ -4,6 +4,7 @@ Full-stack assignment solution using Java 21, Spring Boot, Spring Security, JWT,
 
 Detailed setup and architecture notes:
 
+- [FEATURES.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/FEATURES.md)
 - [SETUP_AND_ARCHITECTURE.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/SETUP_AND_ARCHITECTURE.md)
 - [API_DOCUMENTATION.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/API_DOCUMENTATION.md)
 - [DATABASE_SCHEMA.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/DATABASE_SCHEMA.md)
@@ -17,6 +18,20 @@ CI/CD:
 
 - Backend: Spring Boot 3.4, Spring Security, JPA, H2, JWT, BCrypt
 - Frontend: React 18 + Vite
+
+## Features
+
+- JWT authentication and Spring Security authorization
+- RBAC with `USER` and `ADMIN`
+- Task workflow with assignment, comments, approval, and rejection
+- Audit fields and audit logs
+- Pagination and filtering
+- Swagger / OpenAPI documentation
+- Database schema and ERD documentation
+- Docker and Docker Compose support
+- GitHub Actions CI/CD
+- Unit and integration tests
+- Seed data for testing on initial startup
 
 ## Project Structure
 
