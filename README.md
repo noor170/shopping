@@ -9,6 +9,10 @@ Detailed setup and architecture notes:
 - [DATABASE_SCHEMA.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/DATABASE_SCHEMA.md)
 - [DOCKER_SETUP.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/DOCKER_SETUP.md)
 
+CI/CD:
+
+- GitHub Actions workflow: [.github/workflows/ci-cd.yml](/Users/macbookairm1/Documents/GitHub/demo/shopping/.github/workflows/ci-cd.yml)
+
 ## Stack
 
 - Backend: Spring Boot 3.4, Spring Security, JPA, H2, JWT, BCrypt
