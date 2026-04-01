@@ -1,0 +1,275 @@
+:root {
+  font-family: "Space Grotesk", sans-serif;
+  color: #f4efe6;
+  background:
+    radial-gradient(circle at top left, rgba(252, 122, 87, 0.35), transparent 25%),
+    radial-gradient(circle at top right, rgba(72, 194, 149, 0.2), transparent 28%),
+    linear-gradient(135deg, #0c1a1a, #152f2c 40%, #0c1418);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff8e53, #ffc145);
+  color: #131313;
+  padding: 0.8rem 1.1rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button.ghost {
+  background: transparent;
+  color: #f4efe6;
+  border: 1px solid rgba(244, 239, 230, 0.2);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(9, 15, 16, 0.55);
+  color: #f4efe6;
+  padding: 0.85rem 1rem;
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.hero,
+.panel {
+  backdrop-filter: blur(18px);
+  background: rgba(7, 12, 14, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+  padding: 1.5rem;
+}
+
+.panel {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-panel {
+  max-width: 480px;
+  margin: 6vh auto;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: #ffc145;
+}
+
+.muted {
+  color: rgba(244, 239, 230, 0.72);
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.toolbar,
+.admin-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.toolbar {
+  grid-template-columns: 2fr 1fr 1fr auto;
+  margin-bottom: 1rem;
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-grid {
+  grid-template-columns: 1.2fr 1fr;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.85rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.badge-pending {
+  background: rgba(255, 193, 69, 0.18);
+}
+
+.badge-in_progress {
+  background: rgba(95, 168, 211, 0.22);
+}
+
+.badge-completed {
+  background: rgba(255, 244, 184, 0.22);
+}
+
+.badge-approved {
+  background: rgba(72, 194, 149, 0.2);
+}
+
+.badge-rejected {
+  background: rgba(252, 122, 87, 0.2);
+}
+
+.audit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.comment-list,
+.comment-feed {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.comment-item {
+  padding: 0.65rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.comment-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.comment-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.comment-head,
+.comment-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 8, 10, 0.7);
+  backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 20;
+}
+
+.modal-card {
+  width: min(680px, 100%);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(7, 12, 14, 0.92);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  padding: 1.5rem;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  background: rgba(11, 15, 18, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+}
+
+.credentials {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  color: rgba(244, 239, 230, 0.72);
+}
+
+@media (max-width: 900px) {
+  .toolbar,
+  .admin-grid,
+  .hero {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .shell {
+    padding: 1rem;
+  }
+
+  .pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
