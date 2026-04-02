@@ -2,6 +2,10 @@
 
 Full-stack assignment solution using Java 21, Spring Boot, Spring Security, JWT, React, and H2.
 
+Project demo video:
+
+- [Google Drive Video](https://drive.google.com/file/d/1KItoWmh5zJ51xQYw-sN7dVVY2BvsC9Yf/view?usp=sharing)
+
 Detailed setup and architecture notes:
 
 - [FEATURES.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/FEATURES.md)
@@ -9,6 +13,7 @@ Detailed setup and architecture notes:
 - [API_DOCUMENTATION.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/API_DOCUMENTATION.md)
 - [DATABASE_SCHEMA.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/DATABASE_SCHEMA.md)
 - [DOCKER_SETUP.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/DOCKER_SETUP.md)
+- [DIGITALOCEAN_DEPLOY.md](/Users/macbookairm1/Documents/GitHub/demo/shopping/DIGITALOCEAN_DEPLOY.md)
 
 CI/CD:
 
