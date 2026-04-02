@@ -2,9 +2,11 @@
 
 Full-stack assignment solution using Java 21, Spring Boot, Spring Security, JWT, React, and H2.
 
-Project demo video:
+## Demo Video
 
-- [Google Drive Video](https://drive.google.com/file/d/1KItoWmh5zJ51xQYw-sN7dVVY2BvsC9Yf/view?usp=sharing)
+View the project demo video here:
+
+- [Watch Demo Video on Google Drive](https://drive.google.com/file/d/1KItoWmh5zJ51xQYw-sN7dVVY2BvsC9Yf/view?usp=sharing)
 
 Detailed setup and architecture notes:
 
