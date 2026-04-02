@@ -4,9 +4,9 @@ Full-stack assignment solution using Java 21, Spring Boot, Spring Security, JWT,
 
 ## Demo Video
 
-View the project demo video here:
+Click the preview image below to watch the project demo video:
 
-- [Watch Demo Video on Google Drive](https://drive.google.com/file/d/1KItoWmh5zJ51xQYw-sN7dVVY2BvsC9Yf/view?usp=sharing)
+[![Project Demo Video](./assets/demo-video-card.svg)](https://drive.google.com/file/d/1KItoWmh5zJ51xQYw-sN7dVVY2BvsC9Yf/view?usp=sharing)
 
 Detailed setup and architecture notes:
 

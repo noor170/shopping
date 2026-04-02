@@ -1,0 +1,28 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102321"/>
+      <stop offset="0.55" stop-color="#1C3D39"/>
+      <stop offset="1" stop-color="#0E171A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="202" y1="168" x2="1052" y2="552" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8E53"/>
+      <stop offset="1" stop-color="#FFC145"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" rx="36" fill="url(#bg)"/>
+  <rect x="54" y="54" width="1172" height="612" rx="28" fill="#0B1215" fill-opacity="0.52" stroke="rgba(255,255,255,0.16)"/>
+
+  <circle cx="640" cy="360" r="110" fill="url(#accent)"/>
+  <path d="M606 299L730 360L606 421V299Z" fill="#131313"/>
+
+  <text x="96" y="122" fill="#FFC145" font-family="Arial, Helvetica, sans-serif" font-size="24" letter-spacing="6">PROJECT DEMO</text>
+  <text x="96" y="190" fill="#F4EFE6" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700">Task Management System</text>
+  <text x="96" y="244" fill="#D2CCC2" font-family="Arial, Helvetica, sans-serif" font-size="28">Spring Boot, JWT, RBAC, React, H2, Docker, CI/CD</text>
+
+  <rect x="96" y="524" width="320" height="68" rx="34" fill="url(#accent)"/>
+  <text x="154" y="568" fill="#131313" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Click To Watch Demo</text>
+
+  <text x="96" y="632" fill="#9FB3AF" font-family="Arial, Helvetica, sans-serif" font-size="24">Open the Google Drive video walkthrough from this preview card.</text>
+</svg>
