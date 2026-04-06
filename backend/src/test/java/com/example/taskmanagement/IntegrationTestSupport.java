@@ -47,7 +47,8 @@ public abstract class IntegrationTestSupport {
                                 {
                                   "title": "%s",
                                   "description": "%s",
-                                  "priority": "MEDIUM"
+                                  "priority": "MEDIUM",
+                                  "deadline": "2026-12-31"
                                 }
                                 """.formatted(title, description)))
                 .andExpect(status().isOk())

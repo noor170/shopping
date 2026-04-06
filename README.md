@@ -31,8 +31,10 @@ CI/CD:
 - JWT authentication and Spring Security authorization
 - RBAC with `USER` and `ADMIN`
 - Task workflow with assignment, comments, approval, and rejection
+- Task priority support with `LOW`, `MEDIUM`, and `HIGH`
+- Task deadline support
 - Audit fields and audit logs
-- Pagination and filtering
+- Pagination and filtering by status, priority, and title
 - Swagger / OpenAPI documentation
 - Database schema and ERD documentation
 - Docker and Docker Compose support
@@ -91,15 +93,16 @@ Frontend URL:
 - `GET /api/users` admin only
 - `PATCH /api/users/{id}/status` admin only
 - `POST /api/tasks`
+- `POST /api/tasks` requires `priority` with `LOW`, `MEDIUM`, or `HIGH` and may include `deadline` as `YYYY-MM-DD`
 - `POST /api/tasks` admin may include `assigneeUserId` to assign the task to an active user during creation
-- `PUT /api/tasks/{id}` user can save/update own task at any time with `PENDING`, `IN_PROGRESS`, or `COMPLETED`; admin can update any non-deleted task
+- `PUT /api/tasks/{id}` user can save/update own task at any time with `PENDING`, `IN_PROGRESS`, or `COMPLETED` plus `LOW`/`MEDIUM`/`HIGH` priority and `deadline`; admin can update any non-deleted task
 - `DELETE /api/tasks/{id}` soft delete, including admin delete across all tasks
 - `POST /api/tasks/{id}/assign` admin only, reassign task to an active user
 - `POST /api/tasks/{id}/comments` user or admin can comment on accessible tasks
 - `POST /api/tasks/{id}/submit` submits an already `COMPLETED` task for admin review
 - `POST /api/tasks/{id}/approve` admin only
 - `POST /api/tasks/{id}/reject` admin only
-- `GET /api/tasks?status=COMPLETED&search=api&page=0&size=10`
+- `GET /api/tasks?status=COMPLETED&priority=HIGH&search=api&page=0&size=10`
 - `GET /api/audit-logs` admin only
 
 ## Security Notes

@@ -50,6 +50,7 @@ public class TaskService {
                 .description(request.description())
                 .status(TaskStatus.PENDING)
                 .priority(request.priority())
+                .deadline(request.deadline())
                 .deleted(false)
                 .owner(owner)
                 .build();
@@ -98,6 +99,7 @@ public class TaskService {
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setPriority(request.priority());
+        task.setDeadline(request.deadline());
         task.setStatus(request.status());
         task.setSubmittedAt(null);
         if (request.status() != TaskStatus.APPROVED) {
@@ -271,6 +273,7 @@ public class TaskService {
                 task.getDescription(),
                 task.getStatus(),
                 task.getPriority(),
+                task.getDeadline(),
                 task.isDeleted(),
                 task.getSubmittedAt(),
                 task.getReviewedAt(),

@@ -3,6 +3,7 @@ package com.example.taskmanagement.dto.task;
 import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 public record TaskResponse(
@@ -11,6 +12,7 @@ public record TaskResponse(
         String description,
         TaskStatus status,
         TaskPriority priority,
+        LocalDate deadline,
         boolean deleted,
         Instant submittedAt,
         Instant reviewedAt,

@@ -26,12 +26,14 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                   "title": "Updated Integration Task",
                                   "description": "Updated description",
                                   "priority": "HIGH",
+                                  "deadline": "2026-11-15",
                                   "status": "COMPLETED"
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.priority").value("HIGH"));
+                .andExpect(jsonPath("$.priority").value("HIGH"))
+                .andExpect(jsonPath("$.deadline").value("2026-11-15"));
 
         mockMvc.perform(get("/api/tasks?status=COMPLETED&priority=HIGH&search=Integration&page=0&size=5")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -91,6 +93,7 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                   "title": "Review Task",
                                   "description": "Ready for approval",
                                   "priority": "LOW",
+                                  "deadline": "2026-10-01",
                                   "status": "COMPLETED"
                                 }
                                 """))
@@ -120,6 +123,7 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                   "title": "Reject Task",
                                   "description": "Ready for rejection",
                                   "priority": "HIGH",
+                                  "deadline": "2026-10-15",
                                   "status": "COMPLETED"
                                 }
                                 """))

@@ -1,10 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiRequest } from "./api";
 
-const emptyTaskForm = { title: "", description: "", assigneeUserId: "" };
+const emptyTaskForm = { title: "", description: "", priority: "MEDIUM", deadline: "", assigneeUserId: "" };
 
 const userEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 const adminEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED", "APPROVED", "REJECTED"];
+const taskPriorities = ["LOW", "MEDIUM", "HIGH"];
+
+function DeadlineField({ value, onChange }) {
+  const inputRef = useRef(null);
+
+  function openPicker() {
+    if (typeof inputRef.current?.showPicker === "function") {
+      inputRef.current.showPicker();
+      return;
+    }
+    inputRef.current?.focus();
+  }
+
+  return (
+    <div className="deadline-field">
+      <label htmlFor="task-deadline">Deadline</label>
+      <div className="deadline-input-group">
+        <input
+          id="task-deadline"
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={onChange}
+        />
+        <button type="button" className="ghost" onClick={openPicker}>
+          Open Calendar
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function AuthForm({ mode, onSubmit, switchMode }) {
   const isLogin = mode === "login";
@@ -81,6 +112,15 @@ function FilterBar({ filters, setFilters, refresh }) {
         <option value="REJECTED">Rejected</option>
       </select>
       <select
+        value={filters.priority}
+        onChange={(event) => setFilters((current) => ({ ...current, priority: event.target.value, page: 0 }))}
+      >
+        <option value="">All priorities</option>
+        <option value="LOW">Low</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+      </select>
+      <select
         value={filters.size}
         onChange={(event) => setFilters((current) => ({ ...current, size: Number(event.target.value), page: 0 }))}
       >
@@ -139,6 +179,20 @@ function TaskComposer({ form, setForm, onCreate, users, role }) {
           value={form.description}
           onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
         />
+        <select
+          value={form.priority}
+          onChange={(event) => setForm((current) => ({ ...current, priority: event.target.value }))}
+        >
+          {taskPriorities.map((priority) => (
+            <option key={priority} value={priority}>
+              {priority}
+            </option>
+          ))}
+        </select>
+        <DeadlineField
+          value={form.deadline}
+          onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
+        />
         {role === "ADMIN" && (
           <select
             value={form.assigneeUserId}
@@ -167,6 +221,8 @@ function TaskTable({ tasks, role, users, onSubmitTask, onDeleteTask, onReviewTas
               <th>ID</th>
               <th>Title</th>
               <th>Status</th>
+              <th>Priority</th>
+              <th>Deadline</th>
               <th>Owner</th>
               <th>Review</th>
               {role === "ADMIN" && <th>Assign</th>}
@@ -194,6 +250,12 @@ function TaskTable({ tasks, role, users, onSubmitTask, onDeleteTask, onReviewTas
                 <td>
                   <span className={`badge badge-${task.status.toLowerCase()}`}>{task.status}</span>
                 </td>
+                <td>
+                  <span className={`badge badge-priority badge-priority-${task.priority.toLowerCase()}`}>
+                    {task.priority}
+                  </span>
+                </td>
+                <td>{task.deadline || "-"}</td>
                 <td>{task.ownerUsername}</td>
                 <td>{task.reviewComment || "-"}</td>
                 {role === "ADMIN" && (
@@ -274,6 +336,20 @@ function TaskEditModal({ role, task, form, setForm, onClose, onSave }) {
             onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
           />
           <select
+            value={form.priority}
+            onChange={(event) => setForm((current) => ({ ...current, priority: event.target.value }))}
+          >
+            {taskPriorities.map((priority) => (
+              <option key={priority} value={priority}>
+                {priority}
+              </option>
+            ))}
+          </select>
+          <DeadlineField
+            value={form.deadline}
+            onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
+          />
+          <select
             value={form.status}
             onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
           >
@@ -350,11 +426,11 @@ export default function App() {
   const [taskPage, setTaskPage] = useState(null);
   const [users, setUsers] = useState([]);
   const [audits, setAudits] = useState([]);
-  const [filters, setFilters] = useState({ search: "", status: "", page: 0, size: 10 });
+  const [filters, setFilters] = useState({ search: "", status: "", priority: "", page: 0, size: 10 });
   const [taskForm, setTaskForm] = useState(emptyTaskForm);
   const [commentDrafts, setCommentDrafts] = useState({});
   const [editingTask, setEditingTask] = useState(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "", status: "PENDING" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", priority: "MEDIUM", deadline: "", status: "PENDING" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -392,6 +468,9 @@ export default function App() {
     if (filters.status) {
       params.set("status", filters.status);
     }
+    if (filters.priority) {
+      params.set("priority", filters.priority);
+    }
     params.set("page", String(filters.page));
     params.set("size", String(filters.size));
 
@@ -418,7 +497,7 @@ export default function App() {
 
   useEffect(() => {
     loadDashboardData();
-  }, [token, user, filters.status, filters.page, filters.size]);
+  }, [token, user, filters.status, filters.priority, filters.page, filters.size]);
 
   function logout() {
     setToken("");
@@ -435,6 +514,8 @@ export default function App() {
     setEditForm({
       title: task.title,
       description: task.description,
+      priority: task.priority,
+      deadline: task.deadline || "",
       status: task.status
     });
   }
@@ -475,7 +556,9 @@ export default function App() {
           onCreate={() => run(async () => {
             const body = {
               title: taskForm.title,
-              description: taskForm.description
+              description: taskForm.description,
+              priority: taskForm.priority,
+              deadline: taskForm.deadline || null
             };
             if (user.role === "ADMIN" && taskForm.assigneeUserId) {
               body.assigneeUserId = Number(taskForm.assigneeUserId);
@@ -528,6 +611,8 @@ export default function App() {
             body: {
               title: editForm.title,
               description: editForm.description,
+              priority: editForm.priority,
+              deadline: editForm.deadline || null,
               status: editForm.status
             }
           });

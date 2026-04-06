@@ -39,7 +39,8 @@ class TaskCommentTest {
                                 {
                                   "title": "Commentable task",
                                   "description": "Need a discussion",
-                                  "priority": "LOW"
+                                  "priority": "LOW",
+                                  "deadline": "2026-08-01"
                                 }
                                 """))
                 .andExpect(status().isOk())

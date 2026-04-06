@@ -18,6 +18,8 @@
 - Soft delete task
 - View own tasks as `USER`
 - View all tasks as `ADMIN`
+- Task priority with `LOW`, `MEDIUM`, and `HIGH`
+- Task deadline field
 - Task assignment and reassignment by admin
 - Task comments by user and admin
 - Task workflow with statuses:
@@ -27,6 +29,8 @@
   - `APPROVED`
   - `REJECTED`
 - User can save task progress at any time
+- User and admin can update task priority during create and edit
+- User and admin can set or update task deadline during create and edit
 - Completed task can be submitted for admin review
 - Admin can approve or reject submitted tasks
 
@@ -54,6 +58,7 @@
 - Admin panel
 - Task edit modal
 - Filtering
+- Priority filtering
 - Pagination
 - Comment UI
 

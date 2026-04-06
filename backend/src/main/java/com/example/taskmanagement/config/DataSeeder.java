@@ -14,6 +14,7 @@ import com.example.taskmanagement.repository.TaskCommentRepository;
 import com.example.taskmanagement.repository.TaskRepository;
 import com.example.taskmanagement.repository.UserRepository;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -56,6 +57,7 @@ public class DataSeeder {
                 "Draft the pending checklist for the next release.",
                 TaskStatus.PENDING,
                 TaskPriority.LOW,
+                LocalDate.now().plusDays(5),
                 user,
                 null,
                 null,
@@ -67,6 +69,7 @@ public class DataSeeder {
                 "Work in progress task assigned to demo user.",
                 TaskStatus.IN_PROGRESS,
                 TaskPriority.HIGH,
+                LocalDate.now().plusDays(10),
                 user,
                 null,
                 null,
@@ -78,6 +81,7 @@ public class DataSeeder {
                 "Completed task ready for submission and admin review.",
                 TaskStatus.COMPLETED,
                 TaskPriority.MEDIUM,
+                LocalDate.now().plusDays(2),
                 userTwo,
                 null,
                 now.minusSeconds(2_000),
@@ -89,6 +93,7 @@ public class DataSeeder {
                 "Task already approved by admin for demo purposes.",
                 TaskStatus.APPROVED,
                 TaskPriority.MEDIUM,
+                LocalDate.now().minusDays(1),
                 user,
                 admin,
                 now.minusSeconds(4_000),
@@ -100,6 +105,7 @@ public class DataSeeder {
                 "Previously rejected task for retesting workflow.",
                 TaskStatus.REJECTED,
                 TaskPriority.HIGH,
+                LocalDate.now().plusDays(7),
                 userTwo,
                 admin,
                 now.minusSeconds(3_500),
@@ -155,6 +161,7 @@ public class DataSeeder {
             String description,
             TaskStatus status,
             TaskPriority priority,
+            LocalDate deadline,
             User owner,
             User reviewedBy,
             Instant submittedAt,
@@ -166,6 +173,7 @@ public class DataSeeder {
                 .description(description)
                 .status(status)
                 .priority(priority)
+                .deadline(deadline)
                 .deleted(false)
                 .submittedAt(submittedAt)
                 .reviewedAt(reviewedBy != null ? timestamp.plusSeconds(600) : null)
