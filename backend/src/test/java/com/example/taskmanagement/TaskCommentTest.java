@@ -38,7 +38,8 @@ class TaskCommentTest {
                         .content("""
                                 {
                                   "title": "Commentable task",
-                                  "description": "Need a discussion"
+                                  "description": "Need a discussion",
+                                  "priority": "LOW"
                                 }
                                 """))
                 .andExpect(status().isOk())

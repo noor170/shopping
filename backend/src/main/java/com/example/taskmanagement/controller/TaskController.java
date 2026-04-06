@@ -7,6 +7,7 @@ import com.example.taskmanagement.dto.task.TaskCreateRequest;
 import com.example.taskmanagement.dto.task.TaskResponse;
 import com.example.taskmanagement.dto.task.TaskReviewRequest;
 import com.example.taskmanagement.dto.task.TaskUpdateRequest;
+import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
 import com.example.taskmanagement.security.CustomUserDetails;
 import com.example.taskmanagement.service.TaskService;
@@ -93,12 +94,13 @@ public class TaskController {
     public Page<TaskResponse> getTasks(
             Authentication authentication,
             @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) TaskPriority priority,
             @RequestParam(required = false) String search,
             @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
     ) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
-        return taskService.getTasks(authentication.getName(), role, status, search, pageable);
+        return taskService.getTasks(authentication.getName(), role, status, priority, search, pageable);
     }
 
     @GetMapping("/{taskId}")

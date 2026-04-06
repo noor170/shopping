@@ -46,7 +46,8 @@ public abstract class IntegrationTestSupport {
                         .content("""
                                 {
                                   "title": "%s",
-                                  "description": "%s"
+                                  "description": "%s",
+                                  "priority": "MEDIUM"
                                 }
                                 """.formatted(title, description)))
                 .andExpect(status().isOk())

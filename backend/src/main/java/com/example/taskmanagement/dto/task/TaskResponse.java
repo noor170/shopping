@@ -1,5 +1,6 @@
 package com.example.taskmanagement.dto.task;
 
+import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
 import java.time.Instant;
 import java.util.List;
@@ -9,6 +10,7 @@ public record TaskResponse(
         String title,
         String description,
         TaskStatus status,
+        TaskPriority priority,
         boolean deleted,
         Instant submittedAt,
         Instant reviewedAt,

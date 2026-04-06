@@ -25,16 +25,19 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                 {
                                   "title": "Updated Integration Task",
                                   "description": "Updated description",
+                                  "priority": "HIGH",
                                   "status": "COMPLETED"
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.priority").value("HIGH"));
 
-        mockMvc.perform(get("/api/tasks?status=COMPLETED&search=Integration&page=0&size=5")
+        mockMvc.perform(get("/api/tasks?status=COMPLETED&priority=HIGH&search=Integration&page=0&size=5")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(taskId));
+                .andExpect(jsonPath("$.content[0].id").value(taskId))
+                .andExpect(jsonPath("$.content[0].priority").value("HIGH"));
 
         mockMvc.perform(get("/api/tasks/" + taskId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -87,6 +90,7 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                 {
                                   "title": "Review Task",
                                   "description": "Ready for approval",
+                                  "priority": "LOW",
                                   "status": "COMPLETED"
                                 }
                                 """))
@@ -115,6 +119,7 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                 {
                                   "title": "Reject Task",
                                   "description": "Ready for rejection",
+                                  "priority": "HIGH",
                                   "status": "COMPLETED"
                                 }
                                 """))

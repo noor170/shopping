@@ -5,6 +5,7 @@ import com.example.taskmanagement.entity.AuditLog;
 import com.example.taskmanagement.entity.Role;
 import com.example.taskmanagement.entity.Task;
 import com.example.taskmanagement.entity.TaskComment;
+import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
 import com.example.taskmanagement.entity.User;
 import com.example.taskmanagement.entity.UserStatus;
@@ -54,6 +55,7 @@ public class DataSeeder {
                 "Prepare release checklist",
                 "Draft the pending checklist for the next release.",
                 TaskStatus.PENDING,
+                TaskPriority.LOW,
                 user,
                 null,
                 null,
@@ -64,6 +66,7 @@ public class DataSeeder {
                 "Implement notification service",
                 "Work in progress task assigned to demo user.",
                 TaskStatus.IN_PROGRESS,
+                TaskPriority.HIGH,
                 user,
                 null,
                 null,
@@ -74,6 +77,7 @@ public class DataSeeder {
                 "Write API regression report",
                 "Completed task ready for submission and admin review.",
                 TaskStatus.COMPLETED,
+                TaskPriority.MEDIUM,
                 userTwo,
                 null,
                 now.minusSeconds(2_000),
@@ -84,6 +88,7 @@ public class DataSeeder {
                 "Refresh onboarding guide",
                 "Task already approved by admin for demo purposes.",
                 TaskStatus.APPROVED,
+                TaskPriority.MEDIUM,
                 user,
                 admin,
                 now.minusSeconds(4_000),
@@ -94,6 +99,7 @@ public class DataSeeder {
                 "Update deployment notes",
                 "Previously rejected task for retesting workflow.",
                 TaskStatus.REJECTED,
+                TaskPriority.HIGH,
                 userTwo,
                 admin,
                 now.minusSeconds(3_500),
@@ -148,6 +154,7 @@ public class DataSeeder {
             String title,
             String description,
             TaskStatus status,
+            TaskPriority priority,
             User owner,
             User reviewedBy,
             Instant submittedAt,
@@ -158,6 +165,7 @@ public class DataSeeder {
                 .title(title)
                 .description(description)
                 .status(status)
+                .priority(priority)
                 .deleted(false)
                 .submittedAt(submittedAt)
                 .reviewedAt(reviewedBy != null ? timestamp.plusSeconds(600) : null)

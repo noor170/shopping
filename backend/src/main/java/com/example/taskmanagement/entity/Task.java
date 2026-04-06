@@ -34,6 +34,10 @@ public class Task extends BaseEntity {
     @Column(nullable = false)
     private TaskStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TaskPriority priority;
+
     @Column(nullable = false)
     private boolean deleted;
 

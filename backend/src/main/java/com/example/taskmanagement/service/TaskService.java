@@ -11,6 +11,7 @@ import com.example.taskmanagement.entity.AuditAction;
 import com.example.taskmanagement.entity.Role;
 import com.example.taskmanagement.entity.Task;
 import com.example.taskmanagement.entity.TaskComment;
+import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
 import com.example.taskmanagement.entity.User;
 import com.example.taskmanagement.exception.BadRequestException;
@@ -48,6 +49,7 @@ public class TaskService {
                 .title(request.title())
                 .description(request.description())
                 .status(TaskStatus.PENDING)
+                .priority(request.priority())
                 .deleted(false)
                 .owner(owner)
                 .build();
@@ -95,6 +97,7 @@ public class TaskService {
         }
         task.setTitle(request.title());
         task.setDescription(request.description());
+        task.setPriority(request.priority());
         task.setStatus(request.status());
         task.setSubmittedAt(null);
         if (request.status() != TaskStatus.APPROVED) {
@@ -189,18 +192,27 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TaskResponse> getTasks(String username, String role, TaskStatus status, String search, Pageable pageable) {
+    public Page<TaskResponse> getTasks(
+            String username,
+            String role,
+            TaskStatus status,
+            TaskPriority priority,
+            String search,
+            Pageable pageable
+    ) {
         String normalizedSearch = search == null ? "" : search.trim();
         List<TaskStatus> statuses = status == null ? Arrays.stream(TaskStatus.values()).toList() : List.of(status);
+        List<TaskPriority> priorities = priority == null ? Arrays.stream(TaskPriority.values()).toList() : List.of(priority);
 
         if (Role.ADMIN.name().equals(role)) {
-            return taskRepository.findByDeletedFalseAndStatusInAndTitleContainingIgnoreCase(statuses, normalizedSearch, pageable)
+            return taskRepository.findByDeletedFalseAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
+                            statuses, priorities, normalizedSearch, pageable)
                     .map(this::toResponse);
         }
 
         User owner = userService.getByUsername(username);
-        return taskRepository.findByDeletedFalseAndOwnerIdAndStatusInAndTitleContainingIgnoreCase(
-                        owner.getId(), statuses, normalizedSearch, pageable)
+        return taskRepository.findByDeletedFalseAndOwnerIdAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
+                        owner.getId(), statuses, priorities, normalizedSearch, pageable)
                 .map(this::toResponse);
     }
 
@@ -258,6 +270,7 @@ public class TaskService {
                 task.getTitle(),
                 task.getDescription(),
                 task.getStatus(),
+                task.getPriority(),
                 task.isDeleted(),
                 task.getSubmittedAt(),
                 task.getReviewedAt(),
