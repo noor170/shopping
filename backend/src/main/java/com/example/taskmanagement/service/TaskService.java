@@ -42,6 +42,7 @@ public class TaskService {
     private final TaskCommentRepository taskCommentRepository;
     private final TaskAttachmentRepository taskAttachmentRepository;
     private final AttachmentStorageService attachmentStorageService;
+    private final TaskExportService taskExportService;
     private final UserService userService;
     private final AuditService auditService;
 
@@ -249,6 +250,7 @@ public class TaskService {
             String role,
             TaskStatus status,
             TaskPriority priority,
+            Long ownerUserId,
             String search,
             Pageable pageable
     ) {
@@ -257,6 +259,11 @@ public class TaskService {
         List<TaskPriority> priorities = priority == null ? Arrays.stream(TaskPriority.values()).toList() : List.of(priority);
 
         if (Role.ADMIN.name().equals(role)) {
+            if (ownerUserId != null) {
+                return taskRepository.findByDeletedFalseAndOwnerIdAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
+                                ownerUserId, statuses, priorities, normalizedSearch, pageable)
+                        .map(this::toResponse);
+            }
             return taskRepository.findByDeletedFalseAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
                             statuses, priorities, normalizedSearch, pageable)
                     .map(this::toResponse);
@@ -266,6 +273,36 @@ public class TaskService {
         return taskRepository.findByDeletedFalseAndOwnerIdAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
                         owner.getId(), statuses, priorities, normalizedSearch, pageable)
                 .map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public byte[] exportTasksPdf(
+            String username,
+            String role,
+            TaskStatus status,
+            TaskPriority priority,
+            Long ownerUserId,
+            String search
+    ) {
+        List<Task> tasks = findVisibleTasks(username, role, status, priority, ownerUserId, search);
+        auditService.log(AuditAction.TASK_EXPORTED, "TASK", username, "Tasks exported as PDF");
+        return taskExportService.exportPdf(tasks, username);
+    }
+
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public byte[] exportTasksExcel(
+            String username,
+            String role,
+            TaskStatus status,
+            TaskPriority priority,
+            Long ownerUserId,
+            String search
+    ) {
+        List<Task> tasks = findVisibleTasks(username, role, status, priority, ownerUserId, search);
+        auditService.log(AuditAction.TASK_EXPORTED, "TASK", username, "Tasks exported as Excel");
+        return taskExportService.exportExcel(tasks);
     }
 
     @Transactional(readOnly = true)
@@ -314,6 +351,32 @@ public class TaskService {
 
     private boolean isUserManagedStatus(TaskStatus status) {
         return status == TaskStatus.PENDING || status == TaskStatus.IN_PROGRESS || status == TaskStatus.COMPLETED;
+    }
+
+    private List<Task> findVisibleTasks(
+            String username,
+            String role,
+            TaskStatus status,
+            TaskPriority priority,
+            Long ownerUserId,
+            String search
+    ) {
+        String normalizedSearch = search == null ? "" : search.trim();
+        List<TaskStatus> statuses = status == null ? Arrays.stream(TaskStatus.values()).toList() : List.of(status);
+        List<TaskPriority> priorities = priority == null ? Arrays.stream(TaskPriority.values()).toList() : List.of(priority);
+
+        if (Role.ADMIN.name().equals(role)) {
+            if (ownerUserId != null) {
+                return taskRepository.findByDeletedFalseAndOwnerIdAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
+                        ownerUserId, statuses, priorities, normalizedSearch, org.springframework.data.domain.Pageable.unpaged()).getContent();
+            }
+            return taskRepository.findByDeletedFalseAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
+                    statuses, priorities, normalizedSearch, org.springframework.data.domain.Pageable.unpaged()).getContent();
+        }
+
+        User owner = userService.getByUsername(username);
+        return taskRepository.findByDeletedFalseAndOwnerIdAndStatusInAndPriorityInAndTitleContainingIgnoreCase(
+                owner.getId(), statuses, priorities, normalizedSearch, org.springframework.data.domain.Pageable.unpaged()).getContent();
     }
 
     private TaskResponse toResponse(Task task) {

@@ -95,6 +95,20 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(delete("/api/tasks/" + taskId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/tasks/export/pdf?search=Integration")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .contentTypeCompatibleWith(MediaType.APPLICATION_PDF));
+
+        mockMvc.perform(get("/api/tasks/export/excel?search=Integration")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .contentTypeCompatibleWith(
+                                MediaType.parseMediaType(
+                                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")));
     }
 
     @Test

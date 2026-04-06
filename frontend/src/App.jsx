@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { apiRequest, openProtectedFile } from "./api";
+import { apiRequest, downloadProtectedFile, openProtectedFile } from "./api";
 
 const emptyTaskForm = {
   title: "",
@@ -99,7 +99,7 @@ function AuthForm({ mode, onSubmit, switchMode }) {
   );
 }
 
-function FilterBar({ filters, setFilters, refresh }) {
+function FilterBar({ filters, setFilters, refresh, onExport, users, role }) {
   return (
     <div className="toolbar">
       <input
@@ -127,6 +127,26 @@ function FilterBar({ filters, setFilters, refresh }) {
         <option value="MEDIUM">Medium</option>
         <option value="HIGH">High</option>
       </select>
+      {role === "ADMIN" && (
+        <select
+          value={filters.ownerUserId}
+          onChange={(event) => setFilters((current) => ({ ...current, ownerUserId: event.target.value, page: 0 }))}
+        >
+          <option value="">All users</option>
+          {users.filter((item) => item.role === "USER").map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.username}
+            </option>
+          ))}
+        </select>
+      )}
+      <select
+        value={filters.exportFormat}
+        onChange={(event) => setFilters((current) => ({ ...current, exportFormat: event.target.value }))}
+      >
+        <option value="pdf">Export as PDF</option>
+        <option value="excel">Export as Excel</option>
+      </select>
       <select
         value={filters.size}
         onChange={(event) => setFilters((current) => ({ ...current, size: Number(event.target.value), page: 0 }))}
@@ -136,6 +156,7 @@ function FilterBar({ filters, setFilters, refresh }) {
         <option value="20">20 / page</option>
       </select>
       <button onClick={refresh}>Refresh</button>
+      <button className="ghost" onClick={onExport}>Export Tasks</button>
     </div>
   );
 }
@@ -473,7 +494,15 @@ export default function App() {
   const [taskPage, setTaskPage] = useState(null);
   const [users, setUsers] = useState([]);
   const [audits, setAudits] = useState([]);
-  const [filters, setFilters] = useState({ search: "", status: "", priority: "", page: 0, size: 10 });
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "",
+    priority: "",
+    ownerUserId: "",
+    exportFormat: "pdf",
+    page: 0,
+    size: 10
+  });
   const [taskForm, setTaskForm] = useState(emptyTaskForm);
   const [commentDrafts, setCommentDrafts] = useState({});
   const [editingTask, setEditingTask] = useState(null);
@@ -527,6 +556,9 @@ export default function App() {
     if (filters.priority) {
       params.set("priority", filters.priority);
     }
+    if (user.role === "ADMIN" && filters.ownerUserId) {
+      params.set("ownerUserId", filters.ownerUserId);
+    }
     params.set("page", String(filters.page));
     params.set("size", String(filters.size));
 
@@ -551,9 +583,26 @@ export default function App() {
     }, "Data refreshed");
   }
 
+  function buildTaskFilterQuery() {
+    const params = new URLSearchParams();
+    if (filters.search) {
+      params.set("search", filters.search);
+    }
+    if (filters.status) {
+      params.set("status", filters.status);
+    }
+    if (filters.priority) {
+      params.set("priority", filters.priority);
+    }
+    if (user.role === "ADMIN" && filters.ownerUserId) {
+      params.set("ownerUserId", filters.ownerUserId);
+    }
+    return params.toString();
+  }
+
   useEffect(() => {
     loadDashboardData();
-  }, [token, user, filters.status, filters.priority, filters.page, filters.size]);
+  }, [token, user, filters.status, filters.priority, filters.ownerUserId, filters.page, filters.size]);
 
   function logout() {
     setToken("");
@@ -602,7 +651,19 @@ export default function App() {
         <button className="ghost" onClick={logout}>Logout</button>
       </section>
 
-      <FilterBar filters={filters} setFilters={setFilters} refresh={loadDashboardData} />
+      <FilterBar
+        filters={filters}
+        setFilters={setFilters}
+        refresh={loadDashboardData}
+        users={users}
+        role={user.role}
+        onExport={() => run(async () => {
+          const query = buildTaskFilterQuery();
+          const path = filters.exportFormat === "excel" ? "/tasks/export/excel" : "/tasks/export/pdf";
+          const filename = filters.exportFormat === "excel" ? "tasks-export.xlsx" : "tasks-export.pdf";
+          await downloadProtectedFile(`${path}${query ? `?${query}` : ""}`, token, filename);
+        }, `${filters.exportFormat.toUpperCase()} downloaded`)}
+      />
       <PaginationBar pageInfo={taskPage} setFilters={setFilters} />
 
       {(user.role === "USER" || user.role === "ADMIN") && (

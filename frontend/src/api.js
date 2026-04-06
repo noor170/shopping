@@ -50,3 +50,25 @@ export async function openProtectedFile(path, token) {
   window.open(objectUrl, "_blank", "noopener,noreferrer");
   window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 60_000);
 }
+
+export async function downloadProtectedFile(path, token, fallbackFilename) {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: getHeaders(token, false)
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to download file");
+  }
+
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const contentDisposition = response.headers.get("content-disposition") || "";
+  const filenameMatch = contentDisposition.match(/filename=\"?([^"]+)\"?/i);
+  link.href = objectUrl;
+  link.download = filenameMatch?.[1] || fallbackFilename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 60_000);
+}

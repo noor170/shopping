@@ -111,12 +111,13 @@ public class TaskController {
             Authentication authentication,
             @RequestParam(required = false) TaskStatus status,
             @RequestParam(required = false) TaskPriority priority,
+            @RequestParam(required = false) Long ownerUserId,
             @RequestParam(required = false) String search,
             @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
     ) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
-        return taskService.getTasks(authentication.getName(), role, status, priority, search, pageable);
+        return taskService.getTasks(authentication.getName(), role, status, priority, ownerUserId, search, pageable);
     }
 
     @GetMapping("/{taskId}")
@@ -138,5 +139,40 @@ public class TaskController {
                 .contentType(MediaType.parseMediaType(attachment.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + attachment.getOriginalFilename() + "\"")
                 .body(resource);
+    }
+
+    @GetMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportTasksPdf(
+            Authentication authentication,
+            @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) TaskPriority priority,
+            @RequestParam(required = false) Long ownerUserId,
+            @RequestParam(required = false) String search
+    ) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        byte[] content = taskService.exportTasksPdf(authentication.getName(), role, status, priority, ownerUserId, search);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"tasks-export.pdf\"")
+                .body(content);
+    }
+
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportTasksExcel(
+            Authentication authentication,
+            @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) TaskPriority priority,
+            @RequestParam(required = false) Long ownerUserId,
+            @RequestParam(required = false) String search
+    ) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        byte[] content = taskService.exportTasksExcel(authentication.getName(), role, status, priority, ownerUserId, search);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"tasks-export.xlsx\"")
+                .body(content);
     }
 }

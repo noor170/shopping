@@ -34,6 +34,7 @@ CI/CD:
 - Task priority support with `LOW`, `MEDIUM`, and `HIGH`
 - Task deadline support
 - Task attachments for `png`, `pdf`, `doc`, `docx`, `xls`, and `xlsx`
+- Export visible tasks as PDF or Excel
 - Audit fields and audit logs
 - Pagination and filtering by status, priority, and title
 - Swagger / OpenAPI documentation
@@ -102,6 +103,8 @@ Frontend URL:
 - `POST /api/tasks/{id}/comments` user or admin can comment on accessible tasks
 - `POST /api/tasks/{id}/attachments` user or admin can upload one supported file to an accessible task
 - `GET /api/tasks/{taskId}/attachments/{attachmentId}` user or admin can open an accessible task attachment
+- `GET /api/tasks/export/pdf` downloads the current visible task set as PDF
+- `GET /api/tasks/export/excel` downloads the current visible task set as Excel
 - `POST /api/tasks/{id}/submit` submits an already `COMPLETED` task for admin review
 - `POST /api/tasks/{id}/approve` admin only
 - `POST /api/tasks/{id}/reject` admin only
