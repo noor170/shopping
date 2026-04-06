@@ -100,6 +100,36 @@ textarea {
   gap: 0.85rem;
 }
 
+.binary-toggle-field {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.binary-toggle-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: rgba(244, 239, 230, 0.88);
+}
+
+.binary-toggle {
+  display: grid;
+  grid-template-columns: repeat(var(--toggle-columns, 2), minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.binary-toggle-option {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4efe6;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.85rem 1rem;
+}
+
+.binary-toggle-option-active {
+  background: linear-gradient(90deg, #ff8e53, #ffc145);
+  color: #131313;
+  border-color: transparent;
+}
+
 .toolbar,
 .admin-grid {
   display: grid;
@@ -122,6 +152,48 @@ textarea {
   grid-template-columns: 1.2fr 1fr;
 }
 
+.workspace-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.workspace-main {
+  min-width: 0;
+}
+
+.sidebar-panel {
+  position: sticky;
+  top: 1rem;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.sidebar-link {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4efe6;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-link span {
+  font-size: 0.82rem;
+  color: rgba(244, 239, 230, 0.72);
+}
+
+.sidebar-link-active {
+  background: linear-gradient(90deg, rgba(255, 142, 83, 0.22), rgba(255, 193, 69, 0.2));
+  border-color: rgba(255, 193, 69, 0.4);
+}
+
 .kanban-head {
   display: flex;
   justify-content: space-between;
@@ -134,6 +206,58 @@ textarea {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.matrix-board {
+  display: grid;
+  grid-template-columns: 160px repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.matrix-axis,
+.matrix-axis-corner {
+  padding: 0.85rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+}
+
+.matrix-axis {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.matrix-axis-vertical {
+  align-items: center;
+}
+
+.matrix-cell {
+  min-height: 260px;
+  padding: 1rem;
+  border-radius: 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+
+.matrix-cell-active {
+  border-color: rgba(255, 193, 69, 0.6);
+  background: rgba(255, 193, 69, 0.08);
+  transform: translateY(-2px);
+}
+
+.matrix-cell-head {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.85rem;
+}
+
+.matrix-card-list {
+  display: grid;
+  gap: 0.85rem;
 }
 
 .kanban-column {
@@ -383,7 +507,9 @@ td {
   .admin-grid,
   .hero,
   .kanban-grid,
-  .kanban-head {
+  .kanban-head,
+  .workspace-shell,
+  .matrix-board {
     grid-template-columns: 1fr;
     display: grid;
   }
@@ -399,5 +525,9 @@ td {
 
   .deadline-input-group {
     grid-template-columns: 1fr;
+  }
+
+  .sidebar-panel {
+    position: static;
   }
 }

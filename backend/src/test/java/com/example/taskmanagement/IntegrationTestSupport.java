@@ -48,6 +48,8 @@ public abstract class IntegrationTestSupport {
                                   "title": "%s",
                                   "description": "%s",
                                   "priority": "MEDIUM",
+                                  "importance": "IMPORTANT",
+                                  "urgency": "NOT_URGENT",
                                   "deadline": "2026-12-31"
                                 }
                                 """.formatted(title, description)))

@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { apiRequest, downloadProtectedFile, openProtectedFile } from "./api";
 
 const emptyTaskForm = {
   title: "",
   description: "",
   priority: "MEDIUM",
+  importance: "IMPORTANT",
+  urgency: "NOT_URGENT",
   deadline: "",
   assigneeUserId: "",
   attachmentFile: null
@@ -14,6 +16,8 @@ const userEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 const adminEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED", "APPROVED", "REJECTED"];
 const taskPriorities = ["LOW", "MEDIUM", "HIGH"];
 const kanbanStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED"];
+const urgencyColumns = ["URGENT", "NOT_URGENT"];
+const importanceRows = ["IMPORTANT", "NOT_IMPORTANT"];
 
 function DeadlineField({ value, onChange }) {
   const inputRef = useRef(null);
@@ -40,6 +44,31 @@ function DeadlineField({ value, onChange }) {
         <button type="button" className="ghost" onClick={openPicker}>
           Open Calendar
         </button>
+      </div>
+    </div>
+  );
+}
+
+function TaskBinaryToggle({ label, value, onChange, options }) {
+  return (
+    <div className="binary-toggle-field">
+      <span className="binary-toggle-label">{label}</span>
+      <div
+        className="binary-toggle"
+        role="group"
+        aria-label={label}
+        style={{ "--toggle-columns": options.length }}
+      >
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={value === option.value ? "binary-toggle-option binary-toggle-option-active" : "binary-toggle-option"}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -196,6 +225,14 @@ function formatStatusLabel(status) {
   return status.replace("_", " ");
 }
 
+function formatMatrixLabel(value) {
+  return value.replace("_", " ");
+}
+
+function toDateInputValue(date) {
+  return date.toISOString().slice(0, 10);
+}
+
 function formatFileSize(bytes) {
   if (!bytes) {
     return "0 B";
@@ -289,6 +326,129 @@ function KanbanBoard({ tasks, onMoveTask }) {
   );
 }
 
+function PriorityMatrixBoard({ tasks, onMoveTask }) {
+  const [activeCell, setActiveCell] = useState("");
+  const visibleTasks = tasks.filter((task) => kanbanStatuses.includes(task.status));
+
+  function getCellTasks(row, column) {
+    return visibleTasks.filter((task) => task.importance === row && task.urgency === column);
+  }
+
+  function handleDrop(event, row, column) {
+    event.preventDefault();
+    setActiveCell("");
+    const taskId = Number(event.dataTransfer.getData("text/task-id"));
+    const task = visibleTasks.find((item) => item.id === taskId);
+    if (!task) {
+      return;
+    }
+    onMoveTask(task, row, column);
+  }
+
+  return (
+    <section className="panel">
+      <div className="kanban-head">
+        <div>
+          <div className="eyebrow">Priority Matrix</div>
+          <h2>Important vs Urgent</h2>
+        </div>
+        <span className="muted">Columns are urgency. Rows are importance.</span>
+      </div>
+      <div className="matrix-board">
+        <div className="matrix-axis-corner" />
+        {urgencyColumns.map((column) => (
+          <div key={column} className="matrix-axis">
+            {formatMatrixLabel(column)}
+          </div>
+        ))}
+        {importanceRows.map((row) => (
+          <Fragment key={row}>
+            <div key={`${row}-label`} className="matrix-axis matrix-axis-vertical">
+              {formatMatrixLabel(row)}
+            </div>
+            {urgencyColumns.map((column) => {
+              const cellKey = `${row}-${column}`;
+              return (
+                <div
+                  key={cellKey}
+                  className={`matrix-cell${activeCell === cellKey ? " matrix-cell-active" : ""}`}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setActiveCell(cellKey);
+                  }}
+                  onDragLeave={() => setActiveCell((current) => (current === cellKey ? "" : current))}
+                  onDrop={(event) => handleDrop(event, row, column)}
+                >
+                  <div className="matrix-cell-head">
+                    <strong>{formatMatrixLabel(row)} / {formatMatrixLabel(column)}</strong>
+                    <span className="muted">{getCellTasks(row, column).length} task(s)</span>
+                  </div>
+                  <div className="matrix-card-list">
+                    {getCellTasks(row, column).map((task) => (
+                      <article
+                        key={task.id}
+                        className="kanban-card"
+                        draggable
+                        onDragStart={(event) => {
+                          event.dataTransfer.setData("text/task-id", String(task.id));
+                          event.dataTransfer.effectAllowed = "move";
+                        }}
+                      >
+                        <div className="kanban-card-top">
+                          <strong>{task.title}</strong>
+                          <span className={`badge badge-priority badge-priority-${task.priority.toLowerCase()}`}>
+                            {task.priority}
+                          </span>
+                        </div>
+                        <div className="muted">{task.description || "No description"}</div>
+                        <div className="kanban-meta">
+                          <span>#{task.id}</span>
+                          <span>{task.deadline || "No deadline"}</span>
+                        </div>
+                      </article>
+                    ))}
+                    {getCellTasks(row, column).length === 0 && (
+                      <div className="kanban-empty muted">Drop a task here</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </Fragment>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function UserSidebar({ activeView, setActiveView }) {
+  const items = [
+    { id: "kanban", label: "Kanban Board", hint: "Drag tasks across workflow" },
+    { id: "priority-matrix", label: "Priority Matrix", hint: "Manage important vs urgent work" },
+    { id: "backlog", label: "Backlog Tasks", hint: "Browse and manage task details" }
+  ];
+
+  return (
+    <aside className="panel sidebar-panel">
+      <div className="eyebrow">Workspace</div>
+      <h2>Views</h2>
+      <div className="sidebar-nav">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`sidebar-link${activeView === item.id ? " sidebar-link-active" : ""}`}
+            onClick={() => setActiveView(item.id)}
+          >
+            <strong>{item.label}</strong>
+            <span>{item.hint}</span>
+          </button>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
 function TaskComposer({ form, setForm, onCreate, users, role, fileInputKey }) {
   return (
     <section className="panel">
@@ -305,16 +465,30 @@ function TaskComposer({ form, setForm, onCreate, users, role, fileInputKey }) {
           value={form.description}
           onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
         />
-        <select
+        <TaskBinaryToggle
+          label="Priority"
           value={form.priority}
-          onChange={(event) => setForm((current) => ({ ...current, priority: event.target.value }))}
-        >
-          {taskPriorities.map((priority) => (
-            <option key={priority} value={priority}>
-              {priority}
-            </option>
-          ))}
-        </select>
+          onChange={(nextValue) => setForm((current) => ({ ...current, priority: nextValue }))}
+          options={taskPriorities.map((priority) => ({ value: priority, label: priority }))}
+        />
+        <TaskBinaryToggle
+          label="Importance"
+          value={form.importance}
+          onChange={(nextValue) => setForm((current) => ({ ...current, importance: nextValue }))}
+          options={[
+            { value: "IMPORTANT", label: "Important" },
+            { value: "NOT_IMPORTANT", label: "Not Important" }
+          ]}
+        />
+        <TaskBinaryToggle
+          label="Urgency"
+          value={form.urgency}
+          onChange={(nextValue) => setForm((current) => ({ ...current, urgency: nextValue }))}
+          options={[
+            { value: "URGENT", label: "Urgent" },
+            { value: "NOT_URGENT", label: "Not Urgent" }
+          ]}
+        />
         <DeadlineField
           value={form.deadline}
           onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
@@ -482,16 +656,30 @@ function TaskEditModal({ role, task, form, setForm, onClose, onSave, fileInputKe
             value={form.description}
             onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
           />
-          <select
+          <TaskBinaryToggle
+            label="Priority"
             value={form.priority}
-            onChange={(event) => setForm((current) => ({ ...current, priority: event.target.value }))}
-          >
-            {taskPriorities.map((priority) => (
-              <option key={priority} value={priority}>
-                {priority}
-              </option>
-            ))}
-          </select>
+            onChange={(nextValue) => setForm((current) => ({ ...current, priority: nextValue }))}
+            options={taskPriorities.map((priority) => ({ value: priority, label: priority }))}
+          />
+          <TaskBinaryToggle
+            label="Importance"
+            value={form.importance}
+            onChange={(nextValue) => setForm((current) => ({ ...current, importance: nextValue }))}
+            options={[
+              { value: "IMPORTANT", label: "Important" },
+              { value: "NOT_IMPORTANT", label: "Not Important" }
+            ]}
+          />
+          <TaskBinaryToggle
+            label="Urgency"
+            value={form.urgency}
+            onChange={(nextValue) => setForm((current) => ({ ...current, urgency: nextValue }))}
+            options={[
+              { value: "URGENT", label: "Urgent" },
+              { value: "NOT_URGENT", label: "Not Urgent" }
+            ]}
+          />
           <DeadlineField
             value={form.deadline}
             onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
@@ -595,14 +783,56 @@ export default function App() {
     title: "",
     description: "",
     priority: "MEDIUM",
+    importance: "IMPORTANT",
+    urgency: "NOT_URGENT",
     deadline: "",
     status: "PENDING",
     attachmentFile: null
   });
   const [taskFileInputKey, setTaskFileInputKey] = useState(0);
   const [editFileInputKey, setEditFileInputKey] = useState(0);
+  const [userView, setUserView] = useState("kanban");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  async function saveTaskStatus(task, status) {
+    await apiRequest(`/tasks/${task.id}`, {
+      method: "PUT",
+      token,
+      body: {
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        importance: task.importance,
+        urgency: task.urgency,
+        deadline: task.deadline || null,
+        status
+      }
+    });
+  }
+
+  async function saveTaskMatrixPlacement(task, row, column) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const nextDay = new Date(today);
+    nextDay.setDate(today.getDate() + 1);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+
+    await apiRequest(`/tasks/${task.id}`, {
+      method: "PUT",
+      token,
+      body: {
+        title: task.title,
+        description: task.description,
+        priority: row === "IMPORTANT" ? "HIGH" : "LOW",
+        importance: row,
+        urgency: column,
+        deadline: column === "URGENT" ? toDateInputValue(nextDay) : toDateInputValue(nextWeek),
+        status: task.status
+      }
+    });
+  }
 
   async function run(action, successMessage) {
     try {
@@ -705,6 +935,8 @@ export default function App() {
       title: task.title,
       description: task.description,
       priority: task.priority,
+      importance: task.importance || "IMPORTANT",
+      urgency: task.urgency || "NOT_URGENT",
       deadline: task.deadline || "",
       status: task.status,
       attachmentFile: null
@@ -752,23 +984,52 @@ export default function App() {
       <PaginationBar pageInfo={taskPage} setFilters={setFilters} />
 
       {user.role === "USER" && (
-        <KanbanBoard
-          tasks={tasks}
-          onMoveTask={(task, status) => run(async () => {
-            await apiRequest(`/tasks/${task.id}`, {
-              method: "PUT",
-              token,
-              body: {
-                title: task.title,
-                description: task.description,
-                priority: task.priority,
-                deadline: task.deadline || null,
-                status
-              }
-            });
-            await loadDashboardData();
-          }, `Task moved to ${formatStatusLabel(status)}`)}
-        />
+        <section className="workspace-shell">
+          <UserSidebar activeView={userView} setActiveView={setUserView} />
+          <div className="workspace-main">
+            {userView === "kanban" && (
+              <KanbanBoard
+                tasks={tasks}
+                onMoveTask={(task, status) => run(async () => {
+                  await saveTaskStatus(task, status);
+                  await loadDashboardData();
+                }, `Task moved to ${formatStatusLabel(status)}`)}
+              />
+            )}
+
+            {userView === "priority-matrix" && (
+              <PriorityMatrixBoard
+                tasks={tasks}
+                onMoveTask={(task, row, column) => run(async () => {
+                  await saveTaskMatrixPlacement(task, row, column);
+                  await loadDashboardData();
+                }, `Task moved to ${formatMatrixLabel(row)} / ${formatMatrixLabel(column)}`)}
+              />
+            )}
+
+            {userView === "backlog" && (
+              <TaskTable
+                tasks={tasks}
+                role={user.role}
+                users={users}
+                onSubmitTask={(taskId) => run(async () => {
+                  await apiRequest(`/tasks/${taskId}/submit`, { method: "POST", token });
+                  await loadDashboardData();
+                }, "Task submitted")}
+                onDeleteTask={(taskId) => run(async () => {
+                  await apiRequest(`/tasks/${taskId}`, { method: "DELETE", token });
+                  await loadDashboardData();
+                }, "Task deleted")}
+                onReviewTask={() => {}}
+                onAssignTask={() => {}}
+                onOpenAttachment={(taskId, attachmentId) => run(async () => {
+                  await openProtectedFile(`/tasks/${taskId}/attachments/${attachmentId}`, token);
+                }, "Attachment opened")}
+                onEditTask={openEditTask}
+              />
+            )}
+          </div>
+        </section>
       )}
 
       {(user.role === "USER" || user.role === "ADMIN") && (
@@ -783,6 +1044,8 @@ export default function App() {
               title: taskForm.title,
               description: taskForm.description,
               priority: taskForm.priority,
+              importance: taskForm.importance,
+              urgency: taskForm.urgency,
               deadline: taskForm.deadline || null
             };
             if (user.role === "ADMIN" && taskForm.assigneeUserId) {
@@ -801,36 +1064,38 @@ export default function App() {
         />
       )}
 
-      <TaskTable
-        tasks={tasks}
-        role={user.role}
-        users={users}
-        onSubmitTask={(taskId) => run(async () => {
-          await apiRequest(`/tasks/${taskId}/submit`, { method: "POST", token });
-          await loadDashboardData();
-        }, "Task submitted")}
-        onDeleteTask={(taskId) => run(async () => {
-          await apiRequest(`/tasks/${taskId}`, { method: "DELETE", token });
-          await loadDashboardData();
-        }, "Task deleted")}
-        onReviewTask={(taskId, action) => run(async () => {
-          const comment = window.prompt(`Optional ${action} comment`) || "";
-          await apiRequest(`/tasks/${taskId}/${action}`, { method: "POST", token, body: { comment } });
-          await loadDashboardData();
-        }, `Task ${action}d`)}
-        onAssignTask={(taskId, assigneeUserId) => run(async () => {
-          await apiRequest(`/tasks/${taskId}/assign`, {
-            method: "POST",
-            token,
-            body: { assigneeUserId: Number(assigneeUserId) }
-          });
-          await loadDashboardData();
-        }, "Task reassigned")}
-        onOpenAttachment={(taskId, attachmentId) => run(async () => {
-          await openProtectedFile(`/tasks/${taskId}/attachments/${attachmentId}`, token);
-        }, "Attachment opened")}
-        onEditTask={openEditTask}
-      />
+      {user.role === "ADMIN" && (
+        <TaskTable
+          tasks={tasks}
+          role={user.role}
+          users={users}
+          onSubmitTask={(taskId) => run(async () => {
+            await apiRequest(`/tasks/${taskId}/submit`, { method: "POST", token });
+            await loadDashboardData();
+          }, "Task submitted")}
+          onDeleteTask={(taskId) => run(async () => {
+            await apiRequest(`/tasks/${taskId}`, { method: "DELETE", token });
+            await loadDashboardData();
+          }, "Task deleted")}
+          onReviewTask={(taskId, action) => run(async () => {
+            const comment = window.prompt(`Optional ${action} comment`) || "";
+            await apiRequest(`/tasks/${taskId}/${action}`, { method: "POST", token, body: { comment } });
+            await loadDashboardData();
+          }, `Task ${action}d`)}
+          onAssignTask={(taskId, assigneeUserId) => run(async () => {
+            await apiRequest(`/tasks/${taskId}/assign`, {
+              method: "POST",
+              token,
+              body: { assigneeUserId: Number(assigneeUserId) }
+            });
+            await loadDashboardData();
+          }, "Task reassigned")}
+          onOpenAttachment={(taskId, attachmentId) => run(async () => {
+            await openProtectedFile(`/tasks/${taskId}/attachments/${attachmentId}`, token);
+          }, "Attachment opened")}
+          onEditTask={openEditTask}
+        />
+      )}
 
       <TaskEditModal
         role={user.role}
@@ -847,6 +1112,8 @@ export default function App() {
               title: editForm.title,
               description: editForm.description,
               priority: editForm.priority,
+              importance: editForm.importance,
+              urgency: editForm.urgency,
               deadline: editForm.deadline || null,
               status: editForm.status
             }

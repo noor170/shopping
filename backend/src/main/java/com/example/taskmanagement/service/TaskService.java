@@ -13,8 +13,10 @@ import com.example.taskmanagement.entity.Role;
 import com.example.taskmanagement.entity.Task;
 import com.example.taskmanagement.entity.TaskAttachment;
 import com.example.taskmanagement.entity.TaskComment;
+import com.example.taskmanagement.entity.TaskImportance;
 import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
+import com.example.taskmanagement.entity.TaskUrgency;
 import com.example.taskmanagement.entity.User;
 import com.example.taskmanagement.exception.BadRequestException;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
@@ -43,6 +45,7 @@ public class TaskService {
     private final TaskAttachmentRepository taskAttachmentRepository;
     private final AttachmentStorageService attachmentStorageService;
     private final TaskExportService taskExportService;
+    private final EmailNotificationService emailNotificationService;
     private final UserService userService;
     private final AuditService auditService;
 
@@ -58,11 +61,16 @@ public class TaskService {
                 .description(request.description())
                 .status(TaskStatus.PENDING)
                 .priority(request.priority())
+                .importance(request.importance())
+                .urgency(request.urgency())
                 .deadline(request.deadline())
                 .deleted(false)
                 .owner(owner)
                 .build();
         Task saved = taskRepository.save(task);
+        if (isAdmin && request.assigneeUserId() != null) {
+            emailNotificationService.sendTaskAssigned(owner, saved);
+        }
         auditService.log(AuditAction.TASK_CREATED, "TASK", saved.getId().toString(), "Task created");
         return toResponse(saved);
     }
@@ -85,6 +93,7 @@ public class TaskService {
             task.setReviewComment(null);
         }
 
+        emailNotificationService.sendTaskAssigned(assignee, task);
         auditService.log(AuditAction.TASK_ASSIGNED, "TASK", task.getId().toString(),
                 "Task assigned to " + assignee.getUsername());
         return toResponse(task);
@@ -94,6 +103,7 @@ public class TaskService {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public TaskResponse updateTask(Authentication authentication, Long taskId, TaskUpdateRequest request) {
         Task task = getAccessibleTask(authentication, taskId);
+        TaskStatus previousStatus = task.getStatus();
         boolean isAdmin = hasRole(authentication, Role.ADMIN);
         if (!isAdmin && (task.getStatus() == TaskStatus.APPROVED || task.isDeleted())) {
             throw new BadRequestException("Task cannot be updated in its current state");
@@ -107,6 +117,8 @@ public class TaskService {
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setPriority(request.priority());
+        task.setImportance(request.importance());
+        task.setUrgency(request.urgency());
         task.setDeadline(request.deadline());
         task.setStatus(request.status());
         task.setSubmittedAt(null);
@@ -116,6 +128,9 @@ public class TaskService {
         }
         if (request.status() != TaskStatus.REJECTED) {
             task.setReviewComment(null);
+        }
+        if (previousStatus != TaskStatus.COMPLETED && request.status() == TaskStatus.COMPLETED) {
+            emailNotificationService.sendTaskCompleted(task.getOwner(), task);
         }
         auditService.log(AuditAction.TASK_UPDATED, "TASK", task.getId().toString(), "Task updated");
         return toResponse(task);
@@ -178,6 +193,7 @@ public class TaskService {
         task.setReviewComment(request.comment());
         task.setReviewedAt(Instant.now());
         task.setReviewedBy(admin);
+        emailNotificationService.sendTaskRejected(task.getOwner(), task);
         auditService.log(AuditAction.TASK_REJECTED, "TASK", task.getId().toString(), "Task rejected");
         return toResponse(task);
     }
@@ -386,6 +402,8 @@ public class TaskService {
                 task.getDescription(),
                 task.getStatus(),
                 task.getPriority(),
+                task.getImportance(),
+                task.getUrgency(),
                 task.getDeadline(),
                 task.isDeleted(),
                 task.getSubmittedAt(),

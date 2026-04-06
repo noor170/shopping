@@ -30,6 +30,8 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                   "title": "Updated Integration Task",
                                   "description": "Updated description",
                                   "priority": "HIGH",
+                                  "importance": "IMPORTANT",
+                                  "urgency": "URGENT",
                                   "deadline": "2026-11-15",
                                   "status": "COMPLETED"
                                 }
@@ -37,6 +39,8 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.priority").value("HIGH"))
+                .andExpect(jsonPath("$.importance").value("IMPORTANT"))
+                .andExpect(jsonPath("$.urgency").value("URGENT"))
                 .andExpect(jsonPath("$.deadline").value("2026-11-15"));
 
         mockMvc.perform(get("/api/tasks?status=COMPLETED&priority=HIGH&search=Integration&page=0&size=5")
@@ -136,6 +140,8 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                   "title": "Review Task",
                                   "description": "Ready for approval",
                                   "priority": "LOW",
+                                  "importance": "NOT_IMPORTANT",
+                                  "urgency": "URGENT",
                                   "deadline": "2026-10-01",
                                   "status": "COMPLETED"
                                 }
@@ -166,6 +172,8 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                   "title": "Reject Task",
                                   "description": "Ready for rejection",
                                   "priority": "HIGH",
+                                  "importance": "IMPORTANT",
+                                  "urgency": "NOT_URGENT",
                                   "deadline": "2026-10-15",
                                   "status": "COMPLETED"
                                 }

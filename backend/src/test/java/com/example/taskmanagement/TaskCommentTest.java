@@ -40,6 +40,8 @@ class TaskCommentTest {
                                   "title": "Commentable task",
                                   "description": "Need a discussion",
                                   "priority": "LOW",
+                                  "importance": "NOT_IMPORTANT",
+                                  "urgency": "NOT_URGENT",
                                   "deadline": "2026-08-01"
                                 }
                                 """))

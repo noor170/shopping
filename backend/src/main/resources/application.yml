@@ -28,6 +28,9 @@ app:
     expiration-ms: 86400000
   storage:
     task-attachments-dir: target/task-attachments
+  notifications:
+    email-enabled: false
+    from: no-reply@taskmanagement.local
 
 springdoc:
   swagger-ui:

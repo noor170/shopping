@@ -5,8 +5,10 @@ import com.example.taskmanagement.entity.AuditLog;
 import com.example.taskmanagement.entity.Role;
 import com.example.taskmanagement.entity.Task;
 import com.example.taskmanagement.entity.TaskComment;
+import com.example.taskmanagement.entity.TaskImportance;
 import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
+import com.example.taskmanagement.entity.TaskUrgency;
 import com.example.taskmanagement.entity.User;
 import com.example.taskmanagement.entity.UserStatus;
 import com.example.taskmanagement.repository.AuditLogRepository;
@@ -57,6 +59,8 @@ public class DataSeeder {
                 "Draft the pending checklist for the next release.",
                 TaskStatus.PENDING,
                 TaskPriority.LOW,
+                TaskImportance.NOT_IMPORTANT,
+                TaskUrgency.NOT_URGENT,
                 LocalDate.now().plusDays(5),
                 user,
                 null,
@@ -69,6 +73,8 @@ public class DataSeeder {
                 "Work in progress task assigned to demo user.",
                 TaskStatus.IN_PROGRESS,
                 TaskPriority.HIGH,
+                TaskImportance.IMPORTANT,
+                TaskUrgency.NOT_URGENT,
                 LocalDate.now().plusDays(10),
                 user,
                 null,
@@ -81,6 +87,8 @@ public class DataSeeder {
                 "Completed task ready for submission and admin review.",
                 TaskStatus.COMPLETED,
                 TaskPriority.MEDIUM,
+                TaskImportance.IMPORTANT,
+                TaskUrgency.URGENT,
                 LocalDate.now().plusDays(2),
                 userTwo,
                 null,
@@ -93,6 +101,8 @@ public class DataSeeder {
                 "Task already approved by admin for demo purposes.",
                 TaskStatus.APPROVED,
                 TaskPriority.MEDIUM,
+                TaskImportance.IMPORTANT,
+                TaskUrgency.URGENT,
                 LocalDate.now().minusDays(1),
                 user,
                 admin,
@@ -105,6 +115,8 @@ public class DataSeeder {
                 "Previously rejected task for retesting workflow.",
                 TaskStatus.REJECTED,
                 TaskPriority.HIGH,
+                TaskImportance.IMPORTANT,
+                TaskUrgency.NOT_URGENT,
                 LocalDate.now().plusDays(7),
                 userTwo,
                 admin,
@@ -161,6 +173,8 @@ public class DataSeeder {
             String description,
             TaskStatus status,
             TaskPriority priority,
+            TaskImportance importance,
+            TaskUrgency urgency,
             LocalDate deadline,
             User owner,
             User reviewedBy,
@@ -173,6 +187,8 @@ public class DataSeeder {
                 .description(description)
                 .status(status)
                 .priority(priority)
+                .importance(importance)
+                .urgency(urgency)
                 .deadline(deadline)
                 .deleted(false)
                 .submittedAt(submittedAt)
