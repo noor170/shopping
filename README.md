@@ -33,6 +33,7 @@ CI/CD:
 - Task workflow with assignment, comments, approval, and rejection
 - Task priority support with `LOW`, `MEDIUM`, and `HIGH`
 - Task deadline support
+- Task attachments for `png`, `pdf`, `doc`, `docx`, `xls`, and `xlsx`
 - Audit fields and audit logs
 - Pagination and filtering by status, priority, and title
 - Swagger / OpenAPI documentation
@@ -99,6 +100,8 @@ Frontend URL:
 - `DELETE /api/tasks/{id}` soft delete, including admin delete across all tasks
 - `POST /api/tasks/{id}/assign` admin only, reassign task to an active user
 - `POST /api/tasks/{id}/comments` user or admin can comment on accessible tasks
+- `POST /api/tasks/{id}/attachments` user or admin can upload one supported file to an accessible task
+- `GET /api/tasks/{taskId}/attachments/{attachmentId}` user or admin can open an accessible task attachment
 - `POST /api/tasks/{id}/submit` submits an already `COMPLETED` task for admin review
 - `POST /api/tasks/{id}/approve` admin only
 - `POST /api/tasks/{id}/reject` admin only

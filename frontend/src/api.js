@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+export const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 function getHeaders(token, hasBody = false) {
   const headers = {};
@@ -12,10 +12,11 @@ function getHeaders(token, hasBody = false) {
 }
 
 export async function apiRequest(path, { method = "GET", token, body } = {}) {
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const response = await fetch(`${API_URL}${path}`, {
     method,
-    headers: getHeaders(token, body !== undefined),
-    body: body !== undefined ? JSON.stringify(body) : undefined
+    headers: isFormData ? getHeaders(token, false) : getHeaders(token, body !== undefined),
+    body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body)
   });
 
   if (!response.ok) {
@@ -33,4 +34,19 @@ export async function apiRequest(path, { method = "GET", token, body } = {}) {
   }
 
   return response.json();
+}
+
+export async function openProtectedFile(path, token) {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: getHeaders(token, false)
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to open attachment");
+  }
+
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  window.open(objectUrl, "_blank", "noopener,noreferrer");
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 60_000);
 }

@@ -20,6 +20,7 @@
 - View all tasks as `ADMIN`
 - Task priority with `LOW`, `MEDIUM`, and `HIGH`
 - Task deadline field
+- Task attachments with `png`, `pdf`, Word, and Excel support
 - Task assignment and reassignment by admin
 - Task comments by user and admin
 - Task workflow with statuses:
@@ -31,6 +32,7 @@
 - User can save task progress at any time
 - User and admin can update task priority during create and edit
 - User and admin can set or update task deadline during create and edit
+- User and admin can upload task attachments and open them from the task view
 - Completed task can be submitted for admin review
 - Admin can approve or reject submitted tasks
 

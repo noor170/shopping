@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { apiRequest } from "./api";
+import { apiRequest, openProtectedFile } from "./api";
 
-const emptyTaskForm = { title: "", description: "", priority: "MEDIUM", deadline: "", assigneeUserId: "" };
+const emptyTaskForm = {
+  title: "",
+  description: "",
+  priority: "MEDIUM",
+  deadline: "",
+  assigneeUserId: "",
+  attachmentFile: null
+};
 
 const userEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 const adminEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED", "APPROVED", "REJECTED"];
@@ -163,7 +170,20 @@ function PaginationBar({ pageInfo, setFilters }) {
   );
 }
 
-function TaskComposer({ form, setForm, onCreate, users, role }) {
+function formatFileSize(bytes) {
+  if (!bytes) {
+    return "0 B";
+  }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function TaskComposer({ form, setForm, onCreate, users, role, fileInputKey }) {
   return (
     <section className="panel">
       <h2>{role === "ADMIN" ? "Assign Task" : "Create Task"}</h2>
@@ -193,6 +213,12 @@ function TaskComposer({ form, setForm, onCreate, users, role }) {
           value={form.deadline}
           onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
         />
+        <input
+          key={fileInputKey}
+          type="file"
+          accept=".png,.pdf,.doc,.docx,.xls,.xlsx"
+          onChange={(event) => setForm((current) => ({ ...current, attachmentFile: event.target.files?.[0] || null }))}
+        />
         {role === "ADMIN" && (
           <select
             value={form.assigneeUserId}
@@ -210,7 +236,7 @@ function TaskComposer({ form, setForm, onCreate, users, role }) {
   );
 }
 
-function TaskTable({ tasks, role, users, onSubmitTask, onDeleteTask, onReviewTask, onAssignTask, onEditTask }) {
+function TaskTable({ tasks, role, users, onSubmitTask, onDeleteTask, onReviewTask, onAssignTask, onEditTask, onOpenAttachment }) {
   return (
     <section className="panel">
       <h2>{role === "ADMIN" ? "All Tasks" : "My Tasks"}</h2>
@@ -236,6 +262,21 @@ function TaskTable({ tasks, role, users, onSubmitTask, onDeleteTask, onReviewTas
                 <td>
                   <strong>{task.title}</strong>
                   <div className="muted">{task.description}</div>
+                  {task.attachments?.length > 0 && (
+                    <div className="attachment-list">
+                      {task.attachments.map((attachment) => (
+                        <div key={attachment.id} className="attachment-item">
+                          <div>
+                            <strong>{attachment.originalFilename}</strong>
+                            <div className="muted">{attachment.contentType} • {formatFileSize(attachment.fileSize)}</div>
+                          </div>
+                          <button className="ghost" onClick={() => onOpenAttachment(task.id, attachment.id)}>
+                            View File
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {task.comments?.length > 0 && (
                     <div className="comment-list">
                       {task.comments.map((comment) => (
@@ -306,7 +347,7 @@ function TaskTable({ tasks, role, users, onSubmitTask, onDeleteTask, onReviewTas
   );
 }
 
-function TaskEditModal({ role, task, form, setForm, onClose, onSave }) {
+function TaskEditModal({ role, task, form, setForm, onClose, onSave, fileInputKey }) {
   if (!task) {
     return null;
   }
@@ -348,6 +389,12 @@ function TaskEditModal({ role, task, form, setForm, onClose, onSave }) {
           <DeadlineField
             value={form.deadline}
             onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
+          />
+          <input
+            key={fileInputKey}
+            type="file"
+            accept=".png,.pdf,.doc,.docx,.xls,.xlsx"
+            onChange={(event) => setForm((current) => ({ ...current, attachmentFile: event.target.files?.[0] || null }))}
           />
           <select
             value={form.status}
@@ -430,7 +477,16 @@ export default function App() {
   const [taskForm, setTaskForm] = useState(emptyTaskForm);
   const [commentDrafts, setCommentDrafts] = useState({});
   const [editingTask, setEditingTask] = useState(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "", priority: "MEDIUM", deadline: "", status: "PENDING" });
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    priority: "MEDIUM",
+    deadline: "",
+    status: "PENDING",
+    attachmentFile: null
+  });
+  const [taskFileInputKey, setTaskFileInputKey] = useState(0);
+  const [editFileInputKey, setEditFileInputKey] = useState(0);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -516,8 +572,10 @@ export default function App() {
       description: task.description,
       priority: task.priority,
       deadline: task.deadline || "",
-      status: task.status
+      status: task.status,
+      attachmentFile: null
     });
+    setEditFileInputKey((current) => current + 1);
   }
 
   if (!token || !user) {
@@ -553,6 +611,7 @@ export default function App() {
           setForm={setTaskForm}
           users={users}
           role={user.role}
+          fileInputKey={taskFileInputKey}
           onCreate={() => run(async () => {
             const body = {
               title: taskForm.title,
@@ -563,8 +622,14 @@ export default function App() {
             if (user.role === "ADMIN" && taskForm.assigneeUserId) {
               body.assigneeUserId = Number(taskForm.assigneeUserId);
             }
-            await apiRequest("/tasks", { method: "POST", token, body });
+            const createdTask = await apiRequest("/tasks", { method: "POST", token, body });
+            if (taskForm.attachmentFile) {
+              const formData = new FormData();
+              formData.append("file", taskForm.attachmentFile);
+              await apiRequest(`/tasks/${createdTask.id}/attachments`, { method: "POST", token, body: formData });
+            }
             setTaskForm(emptyTaskForm);
+            setTaskFileInputKey((current) => current + 1);
             await loadDashboardData();
           }, user.role === "ADMIN" ? "Task assigned" : "Task created")}
         />
@@ -595,6 +660,9 @@ export default function App() {
           });
           await loadDashboardData();
         }, "Task reassigned")}
+        onOpenAttachment={(taskId, attachmentId) => run(async () => {
+          await openProtectedFile(`/tasks/${taskId}/attachments/${attachmentId}`, token);
+        }, "Attachment opened")}
         onEditTask={openEditTask}
       />
 
@@ -603,6 +671,7 @@ export default function App() {
         task={editingTask}
         form={editForm}
         setForm={setEditForm}
+        fileInputKey={editFileInputKey}
         onClose={() => setEditingTask(null)}
         onSave={() => run(async () => {
           await apiRequest(`/tasks/${editingTask.id}`, {
@@ -616,7 +685,13 @@ export default function App() {
               status: editForm.status
             }
           });
+          if (editForm.attachmentFile) {
+            const formData = new FormData();
+            formData.append("file", editForm.attachmentFile);
+            await apiRequest(`/tasks/${editingTask.id}/attachments`, { method: "POST", token, body: formData });
+          }
           setEditingTask(null);
+          setEditFileInputKey((current) => current + 1);
           await loadDashboardData();
         }, "Task updated")}
       />

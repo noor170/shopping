@@ -1,6 +1,7 @@
 package com.example.taskmanagement.service;
 
 import com.example.taskmanagement.dto.task.TaskAssignRequest;
+import com.example.taskmanagement.dto.task.TaskAttachmentResponse;
 import com.example.taskmanagement.dto.task.TaskCommentCreateRequest;
 import com.example.taskmanagement.dto.task.TaskCommentResponse;
 import com.example.taskmanagement.dto.task.TaskCreateRequest;
@@ -10,6 +11,7 @@ import com.example.taskmanagement.dto.task.TaskUpdateRequest;
 import com.example.taskmanagement.entity.AuditAction;
 import com.example.taskmanagement.entity.Role;
 import com.example.taskmanagement.entity.Task;
+import com.example.taskmanagement.entity.TaskAttachment;
 import com.example.taskmanagement.entity.TaskComment;
 import com.example.taskmanagement.entity.TaskPriority;
 import com.example.taskmanagement.entity.TaskStatus;
@@ -17,6 +19,7 @@ import com.example.taskmanagement.entity.User;
 import com.example.taskmanagement.exception.BadRequestException;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
 import com.example.taskmanagement.repository.TaskCommentRepository;
+import com.example.taskmanagement.repository.TaskAttachmentRepository;
 import com.example.taskmanagement.repository.TaskRepository;
 import java.time.Instant;
 import java.util.Arrays;
@@ -28,6 +31,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +40,8 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskCommentRepository taskCommentRepository;
+    private final TaskAttachmentRepository taskAttachmentRepository;
+    private final AttachmentStorageService attachmentStorageService;
     private final UserService userService;
     private final AuditService auditService;
 
@@ -193,6 +200,49 @@ public class TaskService {
         return toCommentResponse(comment);
     }
 
+    @Transactional
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public TaskAttachmentResponse uploadAttachment(Authentication authentication, Long taskId, MultipartFile file) {
+        Task task = getAccessibleTask(authentication, taskId);
+        if (task.isDeleted()) {
+            throw new BadRequestException("Deleted tasks cannot accept attachments");
+        }
+
+        AttachmentStorageService.StoredFile storedFile = attachmentStorageService.store(file);
+        TaskAttachment attachment = taskAttachmentRepository.save(TaskAttachment.builder()
+                .originalFilename(storedFile.originalFilename())
+                .storedFilename(storedFile.storedFilename())
+                .contentType(storedFile.contentType())
+                .fileSize(storedFile.fileSize())
+                .task(task)
+                .build());
+
+        auditService.log(
+                AuditAction.TASK_ATTACHMENT_UPLOADED,
+                "TASK",
+                task.getId().toString(),
+                "Attachment uploaded: " + attachment.getOriginalFilename()
+        );
+
+        return toAttachmentResponse(attachment);
+    }
+
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public TaskAttachment getAttachment(Authentication authentication, Long taskId, Long attachmentId) {
+        Task task = getAccessibleTask(authentication, taskId);
+        if (task.isDeleted()) {
+            throw new ResourceNotFoundException("Attachment not found");
+        }
+        return taskAttachmentRepository.findByIdAndTaskId(attachmentId, taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attachment not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public Resource loadAttachmentResource(TaskAttachment attachment) {
+        return attachmentStorageService.loadAsResource(attachment.getStoredFilename());
+    }
+
     @Transactional(readOnly = true)
     public Page<TaskResponse> getTasks(
             String username,
@@ -286,9 +336,23 @@ public class TaskService {
                 task.getUpdatedBy(),
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
+                taskAttachmentRepository.findByTaskIdOrderByCreatedAtAsc(task.getId()).stream()
+                        .map(this::toAttachmentResponse)
+                        .toList(),
                 taskCommentRepository.findByTaskIdOrderByCreatedAtAsc(task.getId()).stream()
                         .map(this::toCommentResponse)
                         .toList());
+    }
+
+    private TaskAttachmentResponse toAttachmentResponse(TaskAttachment attachment) {
+        return new TaskAttachmentResponse(
+                attachment.getId(),
+                attachment.getOriginalFilename(),
+                attachment.getContentType(),
+                attachment.getFileSize(),
+                "/api/tasks/" + attachment.getTask().getId() + "/attachments/" + attachment.getId(),
+                attachment.getCreatedBy(),
+                attachment.getCreatedAt());
     }
 
     private TaskCommentResponse toCommentResponse(TaskComment comment) {

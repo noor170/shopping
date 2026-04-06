@@ -25,6 +25,7 @@ public record TaskResponse(
         String updatedBy,
         Instant createdAt,
         Instant updatedAt,
+        List<TaskAttachmentResponse> attachments,
         List<TaskCommentResponse> comments
 ) {
 }

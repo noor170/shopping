@@ -1,6 +1,7 @@
 package com.example.taskmanagement.controller;
 
 import com.example.taskmanagement.dto.task.TaskAssignRequest;
+import com.example.taskmanagement.dto.task.TaskAttachmentResponse;
 import com.example.taskmanagement.dto.task.TaskCommentCreateRequest;
 import com.example.taskmanagement.dto.task.TaskCommentResponse;
 import com.example.taskmanagement.dto.task.TaskCreateRequest;
@@ -13,9 +14,13 @@ import com.example.taskmanagement.security.CustomUserDetails;
 import com.example.taskmanagement.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -51,6 +58,15 @@ public class TaskController {
             @Valid @RequestBody TaskCommentCreateRequest request
     ) {
         return taskService.addComment(authentication, taskId, request);
+    }
+
+    @PostMapping(path = "/{taskId}/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public TaskAttachmentResponse uploadAttachment(
+            Authentication authentication,
+            @PathVariable Long taskId,
+            @RequestPart("file") MultipartFile file
+    ) {
+        return taskService.uploadAttachment(authentication, taskId, file);
     }
 
     @PutMapping("/{taskId}")
@@ -108,5 +124,19 @@ public class TaskController {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
         return taskService.getTaskById(authentication.getName(), role, taskId);
+    }
+
+    @GetMapping("/{taskId}/attachments/{attachmentId}")
+    public ResponseEntity<Resource> downloadAttachment(
+            Authentication authentication,
+            @PathVariable Long taskId,
+            @PathVariable Long attachmentId
+    ) {
+        var attachment = taskService.getAttachment(authentication, taskId, attachmentId);
+        Resource resource = taskService.loadAttachmentResource(attachment);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(attachment.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + attachment.getOriginalFilename() + "\"")
+                .body(resource);
     }
 }

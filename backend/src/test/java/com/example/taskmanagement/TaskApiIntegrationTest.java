@@ -2,14 +2,18 @@ package com.example.taskmanagement;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.MvcResult;
 
 class TaskApiIntegrationTest extends IntegrationTestSupport {
 
@@ -46,6 +50,22 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(taskId));
 
+        MockMultipartFile attachment = new MockMultipartFile(
+                "file",
+                "sample.pdf",
+                "application/pdf",
+                "demo attachment".getBytes());
+
+        MvcResult attachmentResult = mockMvc.perform(multipart("/api/tasks/" + taskId + "/attachments")
+                        .file(attachment)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.originalFilename").value("sample.pdf"))
+                .andReturn();
+
+        JsonNode attachmentJson = objectMapper.readTree(attachmentResult.getResponse().getContentAsString());
+        Long attachmentId = attachmentJson.get("id").asLong();
+
         mockMvc.perform(post("/api/tasks/" + taskId + "/comments")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -56,6 +76,15 @@ class TaskApiIntegrationTest extends IntegrationTestSupport {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("API comment"));
+
+        mockMvc.perform(get("/api/tasks/" + taskId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.attachments[0].originalFilename").value("sample.pdf"));
+
+        mockMvc.perform(get("/api/tasks/" + taskId + "/attachments/" + attachmentId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/tasks/" + taskId + "/submit")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))

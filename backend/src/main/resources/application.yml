@@ -26,6 +26,8 @@ app:
   jwt:
     secret: VGhpc0lzQVN1ZmZpY2llbnRseUxvbmdCYXNlNjRTZWNyZXRLZXlGb3JKV1QxMjM0NTY3OA==
     expiration-ms: 86400000
+  storage:
+    task-attachments-dir: target/task-attachments
 
 springdoc:
   swagger-ui:
