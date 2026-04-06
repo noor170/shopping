@@ -13,6 +13,7 @@ const emptyTaskForm = {
 const userEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 const adminEditableStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED", "APPROVED", "REJECTED"];
 const taskPriorities = ["LOW", "MEDIUM", "HIGH"];
+const kanbanStatuses = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 
 function DeadlineField({ value, onChange }) {
   const inputRef = useRef(null);
@@ -191,6 +192,10 @@ function PaginationBar({ pageInfo, setFilters }) {
   );
 }
 
+function formatStatusLabel(status) {
+  return status.replace("_", " ");
+}
+
 function formatFileSize(bytes) {
   if (!bytes) {
     return "0 B";
@@ -202,6 +207,86 @@ function formatFileSize(bytes) {
     return `${(bytes / 1024).toFixed(1)} KB`;
   }
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function KanbanBoard({ tasks, onMoveTask }) {
+  const [activeColumn, setActiveColumn] = useState("");
+  const visibleTasks = tasks.filter((task) => kanbanStatuses.includes(task.status));
+  const hiddenCount = tasks.length - visibleTasks.length;
+
+  function handleDrop(event, nextStatus) {
+    event.preventDefault();
+    setActiveColumn("");
+    const taskId = Number(event.dataTransfer.getData("text/task-id"));
+    const task = visibleTasks.find((item) => item.id === taskId);
+    if (!task || task.status === nextStatus) {
+      return;
+    }
+    onMoveTask(task, nextStatus);
+  }
+
+  return (
+    <section className="panel">
+      <div className="kanban-head">
+        <div>
+          <div className="eyebrow">Kanban View</div>
+          <h2>Drag Tasks Across Workflow</h2>
+        </div>
+        {hiddenCount > 0 && (
+          <span className="muted">{hiddenCount} approved or rejected task(s) are not shown here.</span>
+        )}
+      </div>
+      <div className="kanban-grid">
+        {kanbanStatuses.map((status) => (
+          <div
+            key={status}
+            className={`kanban-column${activeColumn === status ? " kanban-column-active" : ""}`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setActiveColumn(status);
+            }}
+            onDragLeave={() => setActiveColumn((current) => (current === status ? "" : current))}
+            onDrop={(event) => handleDrop(event, status)}
+          >
+            <div className="kanban-column-head">
+              <strong>{formatStatusLabel(status)}</strong>
+              <span className={`badge badge-${status.toLowerCase()}`}>
+                {visibleTasks.filter((task) => task.status === status).length}
+              </span>
+            </div>
+            <div className="kanban-card-list">
+              {visibleTasks.filter((task) => task.status === status).map((task) => (
+                <article
+                  key={task.id}
+                  className="kanban-card"
+                  draggable
+                  onDragStart={(event) => {
+                    event.dataTransfer.setData("text/task-id", String(task.id));
+                    event.dataTransfer.effectAllowed = "move";
+                  }}
+                >
+                  <div className="kanban-card-top">
+                    <strong>{task.title}</strong>
+                    <span className={`badge badge-priority badge-priority-${task.priority.toLowerCase()}`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                  <div className="muted">{task.description || "No description"}</div>
+                  <div className="kanban-meta">
+                    <span>#{task.id}</span>
+                    <span>{task.deadline || "No deadline"}</span>
+                  </div>
+                </article>
+              ))}
+              {visibleTasks.every((task) => task.status !== status) && (
+                <div className="kanban-empty muted">Drop a task here</div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function TaskComposer({ form, setForm, onCreate, users, role, fileInputKey }) {
@@ -665,6 +750,26 @@ export default function App() {
         }, `${filters.exportFormat.toUpperCase()} downloaded`)}
       />
       <PaginationBar pageInfo={taskPage} setFilters={setFilters} />
+
+      {user.role === "USER" && (
+        <KanbanBoard
+          tasks={tasks}
+          onMoveTask={(task, status) => run(async () => {
+            await apiRequest(`/tasks/${task.id}`, {
+              method: "PUT",
+              token,
+              body: {
+                title: task.title,
+                description: task.description,
+                priority: task.priority,
+                deadline: task.deadline || null,
+                status
+              }
+            });
+            await loadDashboardData();
+          }, `Task moved to ${formatStatusLabel(status)}`)}
+        />
+      )}
 
       {(user.role === "USER" || user.role === "ADMIN") && (
         <TaskComposer
